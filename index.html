@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hiển thị ảnh</title>
+</head>
+
+<body>
+    <style>
+        .component {
+            margin: 10px;
+        }
+    </style>
+    <div class="component">
+        <input type="file" id="img_input" onclick="this.value=null">
+    </div>
+    <div class="component">
+        <button onclick="makeNegative()">Âm bản</button>
+    </div>
+    <div class="component">
+        <p>Phân ngưỡng</p>
+        <input type="number" id="threshold_input" placeholder="Nhập ngưỡng 0-255" onchange="makeThreshold()" min="0"
+            max="255" style="width: 200px;">
+        <button onclick="applyLogTransform()">Biến đổi Log</button>
+        <button onclick="applyInverseLogTransform()">Biến đổi Inverse Log</button>
+    </div>
+    <div class="component">
+        <input type="number" id="gamma_input" placeholder="Nhập gamma" min="0" step="0.01" style="width: 200px;"
+            onchange="applyPowerTransform()">
+    </div>
+    <div class="component">
+        <canvas id="img_canvas"></canvas>
+    </div>
+    <div class="component">
+        <canvas id="img_canvas_new"></canvas>
+    </div>
+
+    <script>
+        var canvas = document.getElementById("img_canvas");
+        var ctx = canvas.getContext("2d");
+
+        var canvas_new = document.getElementById("img_canvas_new");
+        var ctx_new = canvas_new.getContext("2d");
+
+        document.getElementById('img_input').addEventListener('change', function (e) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var image = new Image();
+            image.src = URL.createObjectURL(e.target.files[0]);
+
+            image.onload = function () {
+                canvas.width = image.width;
+                canvas.height = image.height;
+                ctx.drawImage(image, 0, 0);
+
+                canvas_new.width = image.width;
+                canvas_new.height = image.height;
+
+            };
+        });
+
+        function makeNegative() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            for (var i = 0; i < data.length; i += 4) {
+                data[i] = 255 - data[i]; // Red
+                data[i + 1] = 255 - data[i + 1]; // Green
+                data[i + 2] = 255 - data[i + 2]; // Blue
+            }
+
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+
+        function makeThreshold() {
+            var threshold = parseInt(document.getElementById("threshold_input").value);
+            var canvas = document.getElementById("img_canvas");
+            var ctx = canvas.getContext("2d");
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            for (var i = 0; i < data.length; i += 4) {
+                var gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+                // Apply thresholding
+                var binaryValue = gray > threshold ? 255 : 0;
+
+                // Assign the thresholded value to each RGB channel
+                data[i] = binaryValue;
+                data[i + 1] = binaryValue;
+                data[i + 2] = binaryValue;
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+
+        function applyLogTransform() {
+            var canvas = document.getElementById("img_canvas");
+            var ctx = canvas.getContext("2d");
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            var c = 255; // Scaling constant
+
+            for (var i = 0; i < data.length; i += 4) {
+                var red = data[i];
+                var green = data[i + 1];
+                var blue = data[i + 2];
+
+                // Calculate grayscale value
+                var gray = (red + green + blue) / 3;
+
+                // Apply log transform to grayscale value
+                var transformedGray = c * (Math.log(gray + 1) / Math.log(256));
+
+                // Set RGB channels to the transformed grayscale value
+                data[i] = transformedGray;
+                data[i + 1] = transformedGray;
+                data[i + 2] = transformedGray;
+            }
+
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+
+        function applyInverseLogTransform() {
+            var canvas = document.getElementById("img_canvas");
+            var ctx = canvas.getContext("2d");
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            var c = 255; // Scaling constant
+
+            for (var i = 0; i < data.length; i += 4) {
+                var red = data[i];
+                var green = data[i + 1];
+                var blue = data[i + 2];
+
+                // Calculate grayscale value
+                var gray = (red + green + blue) / 3;
+
+                // Apply log transform to grayscale value
+                var transformedGray = c * ((1 / Math.log(gray + 1)) / Math.log(256));
+
+                // Set RGB channels to the transformed grayscale value
+                data[i] = transformedGray;
+                data[i + 1] = transformedGray;
+                data[i + 2] = transformedGray;
+            }
+
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+
+        function applyPowerTransform() {
+            var canvas = document.getElementById("img_canvas");
+            var ctx = canvas.getContext("2d");
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+
+            var c = 255; // Scaling constant
+            var gamma = parseFloat(document.getElementById("gamma_input").value); // Gamma value
+
+            for (var i = 0; i < data.length; i += 4) {
+                var red = data[i];
+                var green = data[i + 1];
+                var blue = data[i + 2];
+                var gray = (red + green + blue) / 3;
+                var transformedGray = c * Math.pow(gray / 255, gamma);
+
+                data[i] = transformedGray;
+                data[i + 1] = transformedGray;
+                data[i + 2] = transformedGray;
+            }
+
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+    </script>
+</body>
+
+</html>
