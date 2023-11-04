@@ -4,6 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Hiển thị ảnh</title>
+    <style>
+        input {
+            width: 50px;
+        }
+
+        td {
+            border: 1px solid;
+        }
+    </style>
 </head>
 
 <body>
@@ -15,7 +24,7 @@
     <div class="component">
         <div>
             <div class="component">
-                <input type="file" id="img_input" onclick="this.value=null">
+                <input type="file" id="img_input" onclick="this.value=null" style="width: 400px;">
             </div>
             <table style="width: 100%;">
                 <tr>
@@ -26,7 +35,7 @@
                     <td>
                         <p>Phân ngưỡng</p>
                         <input type="number" id="threshold_input" placeholder="Nhập ngưỡng 0-255"
-                            onchange="makeThreshold()" min="0" max="255" style="width: 200px;">
+                            onchange="makeThreshold(parseInt(this.value))" min="0" max="255" style="width: 200px;">
                     </td>
                     <td>
                         <p>Biến đổi Log</p>
@@ -36,27 +45,109 @@
                         <p>Biến đổi mũ</p>
                         <input type="number" id="gamma_input" placeholder="Nhập gamma" min="0" step="0.01"
                             style="width: 200px;">
-                        <button onclick="applyPowerTransform()">Biến đổi mũ power</button>
-                        <button onclick="applyRootTransform()">Biến đổi mũ root</button>
+                        <button onclick="applyPowerTransform()">Power</button>
+                        <button onclick="applyRootTransform()">Root</button>
                     </td>
                     <td>
                         <p>Cân bằng xám</p>
                         <button onclick="equalizeHistorgram()">Cân bằng xám</button>
                     </td>
+                    <td>
+                        <p>Lọc laplacian biến thể</p>
+                        <button onclick="filterLaplacianMutant()">Lọc laplacian biến thể</button>
+                    </td>
                 </tr>
                 <tr>
-                    <td>5</td>
-                    <td>6</td>
-                    <td>5</td>
-                    <td>6</td>
-                    <td>6</td>
+                    <td>
+                        <p>Lọc min</p>
+                        <button onclick="filterMin()">Lọc min</button>
+                    </td>
+                    <td>
+                        <p>Lọc max</p>
+                        <button onclick="filterMax()">Lọc max</button>
+                    </td>
+                    <td>
+                        <p>Lọc không gian (ma trận 3x3 [0,255])</p>
+                        <button onclick="filterKhongGian()">Lọc không gian</button>
+                        <table style="border: 1px solid;">
+                            <tr>
+                                <td><input id="matrixKhongGian00" /></td>
+                                <td><input id="matrixKhongGian01" /></td>
+                                <td><input id="matrixKhongGian02" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="matrixKhongGian10" /></td>
+                                <td><input id="matrixKhongGian11" /></td>
+                                <td><input id="matrixKhongGian12" /></td>
+                            </tr>
+                            <tr>
+                                <td><input id="matrixKhongGian20" /></td>
+                                <td><input id="matrixKhongGian21" /></td>
+                                <td><input id="matrixKhongGian22" /></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td>
+                        <p>Lọc trung bình k giá trị, ngưỡng θ</p>
+                        <button onclick="filterTrungBinhKGiaTri()">Lọc trung bình</button>
+                        <input placeholder="Nhập k" id="trungbinhk" />
+                        <input placeholder="Nhập θ" id="trungbinhphi" />
+                    </td>
+                    <td>
+                        <p>Lọc trung vị </p>
+                        <button onclick="filterMedian()">Lọc trung vị</button>
+                    </td>
+                    <td>
+                        <p>Lọc laplacian</p>
+                        <button onclick="filterLaplacian()">Lọc laplacian</button>
+                    </td>
                 </tr>
                 <tr>
-                    <td>7</td>
-                    <td>8</td>
-                    <td>9</td>
-                    <td>9</td>
-                    <td>9</td>
+                    <td>
+                        <p>Lọc Midpoint filter (<span style="color: red;">Chưa hoàn thiện</span>) </p>
+                        <button onclick="filterMidpoint()">Lọc Midpoint filter</button>
+                    </td>
+                    <td>
+                        <p>Biên Roberts</p>
+                        <input type="number" id="roberts_threshold" placeholder="Nhập threshold" onchange="roberts()"
+                            min="0" step="1">
+                    </td>
+                    <td>
+                        <p>Biên Prewitt </p>
+                        <input type="number" id="prewitt_threshold" placeholder="Nhập threshold" onchange="prewitt()"
+                            min="0" step="1">
+                    </td>
+                    <td>
+                        <p>Biên Sobel </p>
+                        <input type="number" id="sobel_threshold" placeholder="Nhập threshold" onchange="sobel()"
+                            min="0" step="1">
+                    </td>
+                    <td>
+                        <p>Tăng cường Laplacian</p>
+                        <button onclick="increaseLaplacian()">Tăng cường laplacian</button>
+                    </td>
+                    <td>
+                        <p>Tăng cường Laplacian biến thể</p>
+                        <button onclick="increaseLaplacianMutant()">Tăng cường laplacian biến thể</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>Canny (<span style="color: red;">Chưa hoàn thiện</span>)</p>
+                        <button onclick="edgeCanny()">Canny</button>
+                    </td>
+                    <td>
+                        <p>Otsu </p>
+                        <button onclick="otsu()">Otsu</button>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
                 </tr>
             </table>
         </div>
@@ -69,6 +160,7 @@
 
 
     <script>
+        //#region pre-handle
         var canvas = document.getElementById("img_canvas");
         var ctx = canvas.getContext("2d");
 
@@ -99,7 +191,9 @@
 
             };
         });
+        //#endregion
 
+        //#region default Transform
         function makeNegative() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -113,8 +207,8 @@
             ctx_new.putImageData(imageData, 0, 0);
         }
 
-        function makeThreshold() {
-            var threshold = parseInt(document.getElementById("threshold_input").value);
+        function makeThreshold(threshold) {
+
             var canvas = document.getElementById("img_canvas");
             var ctx = canvas.getContext("2d");
 
@@ -245,6 +339,595 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+        //#endregion
+
+        //#region filter
+        function increaseLaplacianMutant() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = matrixold[i][j] - getLaplacianMutantFilterPixel(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function filterLaplacianMutant() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getLaplacianMutantFilterPixel(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function increaseLaplacian() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = matrixold[i][j] - getLaplacianFilterPixel(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function filterLaplacian() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getLaplacianFilterPixel(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function filterMidpoint() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getMidpoint(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function filterMedian() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getMedianValue(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+
+        }
+        function filterTrungBinhKGiaTri() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getAVG_KValue(createNeibourhoodMatrix(matrixold, i, j, 3), matrixold[i][j])
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+
+        }
+        function filterKhongGian() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getValueOfStarFormula(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function filterMin() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var min = getMinOfMatrix(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = min;
+                    data[x + 1] = min;
+                    data[x + 2] = min;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function filterMax() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var max = getMaxOfMatrix(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = max;
+                    data[x + 1] = max;
+                    data[x + 2] = max;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        //#endregion
+
+        //#region edge detection
+        function edgeCanny() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold0 = createMatrix(data, canvas.height, canvas.width);
+            var matrixold = [];
+            var x = 0;
+
+            for (let i = 0; i < matrixold0.length; i++) {
+                var matrixoldrow = [];
+                for (let j = 0; j < matrixold0[i].length; j++) {
+                    var value = getGaussianPixel(createNeibourhoodMatrix(matrixold0, i, j, 5))
+                    matrixoldrow.push(value);
+                }
+                matrixold.push(matrixoldrow);
+            }
+            var directionMatrix = [];
+            for (let i = 0; i < matrixold.length; i++) {
+                directionMatrix[i] = [];
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = 180 * getSobelDirection(createNeibourhoodMatrix(matrixold, i, j, 3)) / Math.PI;
+                    if ((value >= 0 && value < 22.5) || (value >= 157.5 && value <= 180))
+                        directionMatrix[i][j] = 0;
+                    else if ((value >= 22.5 && value < 67.5))
+                        directionMatrix[i][j] = 45;
+                    else if ((value >= 67.5 && value < 112.5))
+                        directionMatrix[i][j] = 90;
+                    else directionMatrix[i][j] = 135;
+                }
+            }
+            debugger
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var back = 0;
+                    var front = 0;
+                    var value = matrixold[i][j];
+                    switch (directionMatrix[i][j]) {
+                        case 0:
+                            back = j - 1 < 0 ? 0 : matrixold[i][j - 1];
+                            front = j + 1 >= matrixold[i].length ? 0 : matrixold[i][j + 1];
+                            break;
+                        case 45:
+                            back = j - 1 < 0 || i + 1 >= matrixold.length ? 0 : matrixold[i + 1][j - 1];
+                            front = j + 1 >= matrixold[i].length || i - 1 < 0 ? 0 : matrixold[i - 1][j + 1];
+                            break;
+                        case 90:
+                            back = j + 1 >= matrixold[i].length || i + 1 >= matrixold.length ? 0 : matrixold[i + 1][j + 1];
+                            front = j - 1 < 0 || i - 1 < 0 ? 0 : matrixold[i - 1][j - 1];
+                            break;
+                        case 135:
+                            back = i - 1 < 0 ? 0 : matrixold[i - 1][j];
+                            front = i + 1 >= matrixold.length ? 0 : matrixold[i + 1][j];
+                            break;
+                        default:
+                            break;
+                    }
+                    if (!(value > back && value > front)) {
+                        value = 0;
+                        matrixold[i][j] = 0;
+                    }
+
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+
+        function laplacian() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var x1y = i + 1 == matrixold.length ? 0 : matrixold[i + 1][j];
+                    var x_1y = i - 1 < 0 ? 0 : matrixold[i - 1][j];
+                    var xy = matrixold[i][j]
+                    var xy1 = j + 1 == matrixold[i].length ? 0 : matrixold[i][j + 1];
+                    var xy_1 = j - 1 < 0 ? 0 : matrixold[i][j - 1];
+                    var sumX = 0;
+                    sumX += (x1y + x_1y - 2 * xy)
+                    var sumY = 0;
+                    sumY += (xy1 + xy_1 - 2 * xy)
+                    var value = Math.sqrt(sumX + sumY);
+                    debugger
+                    value = value == NaN ? 0 : value;
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function roberts() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var xy = matrixold[i][j];
+                    var x1y1 = (i + 1 == matrixold.length || j + 1 == matrixold[i].length) ? 0 : matrixold[i + 1][j + 1];
+                    var x1y = (i + 1 == matrixold.length) ? 0 : matrixold[i + 1][j];
+                    var xy1 = (j + 1 == matrixold[i].length) ? 0 : matrixold[i][j + 1];
+                    var sumX = 0;
+                    sumX += (xy - x1y1);
+                    var sumY = 0;
+                    sumY += (xy1 - x1y);
+                    var threshold = parseInt(document.getElementById("roberts_threshold").value);
+                    var value = Math.sqrt(sumX * sumX + sumY * sumY);
+                    value = value > threshold ? 255 : 0;
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function sobel() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getSobelPixel(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        function prewitt() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrixold = createMatrix(data, canvas.height, canvas.width);
+            var x = 0;
+            for (let i = 0; i < matrixold.length; i++) {
+                for (let j = 0; j < matrixold[i].length; j++) {
+                    var value = getPrewittPixel(createNeibourhoodMatrix(matrixold, i, j, 3))
+                    data[x] = value;
+                    data[x + 1] = value;
+                    data[x + 2] = value;
+                    data[x + 3] = 255;
+                    x += 4;
+                }
+            }
+            ctx_new.putImageData(imageData, 0, 0);
+        }
+        //#endregion
+
+        //#region partition
+        function otsu() {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var histogramData = [];
+            var histogramDataRating = [];
+            var tongTichLuy = [];
+            var equalizeHistogramData = [];
+            var sumTichLuy = []
+            var avgTichLuy = []
+            var mG = 0;
+            var phuongSai = 0;
+            var t = 0;
+            for (var i = 0; i <= 255; i++) {
+                histogramData.push(0);
+            }
+            for (var i = 0; i < data.length; i += 4) {
+                histogramData[data[i]]++;
+            }
+            for (var i = 0; i <= 255; i++) {
+                histogramDataRating[i] = histogramData[i] / (data.length / 4);
+            }
+            debugger
+            for (var i = 0; i <= 255; i++) {
+                mG += i * histogramDataRating[i];
+                var sumTichLuyk = 0;
+                var avgTichLuyk = 0;
+                for (var j = 0; j <= i; j++) {
+                    sumTichLuyk += histogramDataRating[j];
+                    avgTichLuyk += j * histogramDataRating[j];
+                }
+                sumTichLuy.push(sumTichLuyk);
+                avgTichLuy.push(avgTichLuyk);
+            }
+
+            for (var i = 0; i <= 255; i++) {
+                var value = Math.pow(mG * sumTichLuy[i] - avgTichLuy[i], 2) / (sumTichLuy[i] * (1 - sumTichLuy[i]))
+                if (phuongSai < value) {
+                    phuongSai = value;
+                    t = i;
+                };
+            }
+            makeThreshold(t);
+        }
+        //#endregion
+
+        //#region private func
+        function getSobelDirection(inputMatrix) {
+            var sumX = 0;
+            sumX += (inputMatrix[0][2] - inputMatrix[0][0]) / 2;
+            sumX += (2 * inputMatrix[1][2] - 2 * inputMatrix[1][0]) / 4;
+            sumX += (inputMatrix[2][2] - inputMatrix[2][0]) / 2;
+            var sumY = 0;
+            sumY += (inputMatrix[2][0] - inputMatrix[0][0]) / 2;
+            sumY += (2 * inputMatrix[2][1] - 2 * inputMatrix[0][1]) / 4;
+            sumY += (inputMatrix[2][2] - inputMatrix[0][2]) / 2;
+
+            sumX /= 3;
+            sumY /= 3;
+
+            //get tan^-1 of sumX/sumY
+            var grad = Math.atan(Math.abs(sumX / sumY));
+            return grad;
+        }
+        function getGaussianPixel(inputMatrix) {
+            var gaussianMatrix = [
+                [2, 4, 5, 4, 2],
+                [4, 9, 12, 9, 4],
+                [5, 12, 15, 12, 5],
+                [4, 9, 12, 9, 4],
+                [2, 4, 5, 4, 2]
+            ]
+            var sum = 0;
+            for (let i = 0; i < inputMatrix.length; i++) {
+                for (let j = 0; j < inputMatrix[i].length; j++) {
+                    sum += inputMatrix[i][j] * gaussianMatrix[i][j];
+                }
+            }
+            return Math.round(sum / 159);
+        }
+        function getLaplacianMutantFilterPixel(inputMatrix) {
+            var value = (inputMatrix[0][0] + inputMatrix[0][1] + inputMatrix[0][2] +
+                inputMatrix[1][0] - 8 * inputMatrix[1][1] + inputMatrix[1][2] +
+                inputMatrix[2][0] + inputMatrix[2][1] + inputMatrix[2][2]);
+            return value;
+        }
+        function getLaplacianFilterPixel(inputMatrix) {
+            var value = (inputMatrix[2][1] + inputMatrix[0][1] + inputMatrix[1][0] + inputMatrix[1][2] - 4 * inputMatrix[1][1]);
+            return value;
+        }
+        function getSobelPixel(inputMatrix) {
+            var sumX = 0;
+            sumX += (inputMatrix[0][2] - inputMatrix[0][0]) / 2;
+            sumX += (2 * inputMatrix[1][2] - 2 * inputMatrix[1][0]) / 4;
+            sumX += (inputMatrix[2][2] - inputMatrix[2][0]) / 2;
+            var sumY = 0;
+            sumY += (inputMatrix[2][0] - inputMatrix[0][0]) / 2;
+            sumY += (2 * inputMatrix[2][1] - 2 * inputMatrix[0][1]) / 4;
+            sumY += (inputMatrix[2][2] - inputMatrix[0][2]) / 2;
+
+            sumX /= 3;
+            sumY /= 3;
+
+            var deltaF = Math.sqrt(sumX * sumX + sumY * sumY);
+            var threshold = parseInt(document.getElementById("sobel_threshold").value);
+
+            return deltaF >= threshold ? 255 : 0;
+        }
+        function getPrewittPixel(inputMatrix) {
+            var sumX = 0;
+            sumX += (inputMatrix[0][2] - inputMatrix[0][0]) / 2;
+            sumX += (inputMatrix[1][2] - inputMatrix[1][0]) / 2;
+            sumX += (inputMatrix[2][2] - inputMatrix[2][0]) / 2;
+            var sumY = 0;
+            sumY += (inputMatrix[2][0] - inputMatrix[0][0]) / 2;
+            sumY += (inputMatrix[2][1] - inputMatrix[0][1]) / 2;
+            sumY += (inputMatrix[2][2] - inputMatrix[0][2]) / 2;
+
+            sumX /= 3;
+            sumY /= 3;
+
+            var deltaF = Math.sqrt(sumX * sumX + sumY * sumY);
+            var threshold = parseInt(document.getElementById("prewitt_threshold").value);
+
+            return deltaF >= threshold ? 255 : 0;
+        }
+        function createMatrix(dataArray, height, width) {
+            var h = 0;
+            var w = 0;
+            var response = [];
+            var responseRow = [];
+            for (var i = 0; i < dataArray.length; i += 4) {
+                if (w < width) {
+                    responseRow.push(dataArray[i])
+                    w++;
+                } else {
+                    response.push(responseRow);
+                    responseRow = []
+                    responseRow.push(dataArray[i]);
+                    w = 1;
+                    h++;
+                }
+            }
+            response.push(responseRow)
+            return response;
+        }
+        function createNeibourhoodMatrix(dataMatrix, x, y, size) {
+            var h = 0;
+            var w = 0;
+            var response = [];
+            var partSize = (size - (size % 2)) / 2
+            for (var i = x - partSize; i <= x + partSize; i++) {
+                var responseRow = [];
+                for (var j = y - partSize; j <= y + partSize; j++) {
+                    if (i < 0 || j < 0 || i > dataMatrix.length || j > dataMatrix[x].length) responseRow.push(0);
+                    else
+                        try {
+                            responseRow.push(dataMatrix[i][j]);
+                        } catch {
+                            console.log({ i, j })
+                        }
+                }
+                response.push(responseRow);
+            }
+            return response;
+        }
+        function getMinOfMatrix(matrix) {
+            var i = 0;
+            var j = 0;
+            var min = matrix[0][0];
+            while (i < matrix.length) {
+                while (j < matrix[i].length) {
+                    if (min > matrix[i][j]) {
+                        min = matrix[i][j];
+                    }
+                    j++;
+                }
+                i++;
+                j = 0;
+            }
+            return min;
+        }
+        function getMaxOfMatrix(matrix) {
+            var i = 0;
+            var j = 0;
+            var max = matrix[0][0];
+            while (i < matrix.length) {
+                while (j < matrix[i].length) {
+                    if (max < matrix[i][j]) {
+                        max = matrix[i][j];
+                    }
+                    j++;
+                }
+                i++;
+                j = 0;
+            }
+            return max;
+        }
+        function getValueOfStarFormula(matrix) {
+            var i = 0;
+            var j = 0;
+            var sumStar = 0;
+            var sumMatrixFilter = 0;
+            while (i < matrix.length) {
+                while (j < matrix[i].length) {
+                    var ipVal = parseInt(document.getElementById("matrixKhongGian" + i + j).value)
+                    sumStar += matrix[i][j] * ipVal;
+                    sumMatrixFilter += ipVal;
+                    j++;
+                }
+                i++;
+                j = 0;
+            }
+            if (sumMatrixFilter == 0) return 0;
+            return sumStar / sumMatrixFilter;
+        }
+        function getAVG_KValue(matrix, current) {
+            var k = parseInt(document.getElementById("trungbinhk").value);
+            var phi = parseInt(document.getElementById("trungbinhphi").value);
+            var l = []
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix[i].length; j++) {
+                    l.push(matrix[i][j]);
+                }
+            }
+            var sum = 0;
+            l.sort().reverse();
+            for (var i = 0; i < k; i++) {
+                sum += l[i];
+            }
+            sum = sum / k;
+            if (Math.abs(sum - current) > phi) return Math.round(sum);
+            else return current;
+        }
+        function getMedianValue(matrix) {
+            var k = parseInt(document.getElementById("trungbinhk").value);
+            var phi = parseInt(document.getElementById("trungbinhphi").value);
+            var l = []
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix[i].length; j++) {
+                    l.push(matrix[i][j]);
+                }
+            }
+            l.sort().reverse();
+            return l[l.length % 2 == 0 ? l.length / 2 : (l.length + 1) / 2]
+        }
+        function getMidpoint(matrix) {
+
+        }
+        //#endregion
     </script>
 </body>
 
