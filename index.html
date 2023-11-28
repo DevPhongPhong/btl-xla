@@ -142,11 +142,15 @@
                     </td>
                     <td>
                         <p>ISODATA</p>
-                        <input type="number" id="isoData_deltaT" placeholder="Delta T"
-                            onchange="isoData(parseInt(this.value))" min="0" max="255" step="0.1" style="width: 200px;">
+                        <input type="number" id="isoData_deltaT" placeholder="Delta T (0.1 -> 255.0)"
+                            onchange="isoData(parseFloat(this.value))" min="0" max="255" step="0.1"
+                            style="width: 200px;">
                     </td>
                     <td>
-                        
+                        <p>Background Symmetry algorithm (<span style="color: red;">Chưa hoàn thiện</span>)</p>
+                        <input type="number" id="bsaPercent" placeholder="p% (0.01 -> 0.99)"
+                            onchange="bsa(parseFloat(this.value))" min="0.01" max="0.99" step="0.01"
+                            style="width: 200px;">
                     </td>
                     <td>
                     </td>
@@ -159,12 +163,9 @@
         <canvas id="img_canvas_new"></canvas>
         <canvas id="histo"></canvas>
     </div>
-
-
-
-
     <script>
         //#region pre-handle
+        // docuument is ready
         var canvas = document.getElementById("img_canvas");
         var ctx = canvas.getContext("2d");
 
@@ -683,14 +684,43 @@
         //#endregion
 
         //#region partition
+        function bsa(percent) {
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var matrix = createMatrix(data, canvas.width, canvas.height);
+            var histogramData = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
+            var iMax = 0;
+            var iMaxDoiXung = 0;
+            var count = 0;
+            var sum = 0;
+            var tempSum = 0;
+            for (var i = 0; i <= 255; i++) {
+                if (histogramData[i] > histogramData[iMax])
+                    iMax = i;
+            }
+
+            for (; count <= 255; count++) {
+                sum += histogramData[count];
+                if (sum > percent) {
+                    count--;
+                    break;
+                }
+            }
+            console.log(histogramData)
+            console.log(count);
+            console.log(iMax);
+        }
+
         function isoData(deltaT) {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
             var matrix = createMatrix(data, canvas.width, canvas.height);
+            debugger
             if (deltaT == 0) return;
             if (matrix.length == 0) return;
             var t = 128;
             while (true) {
+                debugger
                 var p = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
                 var t1 = (getTrungBinhTichLuy(p, 0, Math.round(t)) / getTongTichLuy(p, 0, Math.round(t))
                     + getTrungBinhTichLuy(p, Math.round(t) + 1, 255) / getTongTichLuy(p, Math.round(t) + 1, 255)) / 2;
@@ -774,6 +804,7 @@
             return histogramData;
         }
         function getHistogramRating(histogramData, countPixel) {
+            console.log(histogramData)
             var histogramDataRating = [];
             for (var i = 0; i <= 255; i++) {
                 histogramDataRating[i] = histogramData[i] / countPixel;
