@@ -8,7 +8,7 @@
         input {
             width: 50px;
         }
-
+        
         td {
             border: 1px solid;
         }
@@ -35,8 +35,7 @@
                     </td>
                     <td>
                         <p>Phân ngưỡng</p>
-                        <input type="number" id="threshold_input" placeholder="Nhập ngưỡng 0-255"
-                            onchange="makeThreshold(parseInt(this.value))" min="0" max="255" style="width: 200px;">
+                        <input type="number" id="threshold_input" placeholder="Nhập ngưỡng 0-255" onchange="makeThreshold(parseInt(this.value))" min="0" max="255" style="width: 200px;">
                     </td>
                     <td>
                         <p>Biến đổi Log</p>
@@ -44,8 +43,7 @@
                     </td>
                     <td>
                         <p>Biến đổi mũ</p>
-                        <input type="number" id="gamma_input" placeholder="Nhập gamma" min="0" step="0.01"
-                            style="width: 200px;">
+                        <input type="number" id="gamma_input" placeholder="Nhập gamma" min="0" step="0.01" style="width: 200px;">
                         <button onclick="applyPowerTransform()">Power</button>
                         <button onclick="applyRootTransform()">Root</button>
                     </td>
@@ -110,18 +108,15 @@
                     </td>
                     <td>
                         <p>Biên Roberts</p>
-                        <input type="number" id="roberts_threshold" placeholder="Nhập threshold" onchange="roberts()"
-                            min="0" step="1">
+                        <input type="number" id="roberts_threshold" placeholder="Nhập threshold" onchange="roberts()" min="0" step="1">
                     </td>
                     <td>
                         <p>Biên Prewitt </p>
-                        <input type="number" id="prewitt_threshold" placeholder="Nhập threshold" onchange="prewitt()"
-                            min="0" step="1">
+                        <input type="number" id="prewitt_threshold" placeholder="Nhập threshold" onchange="prewitt()" min="0" step="1">
                     </td>
                     <td>
                         <p>Biên Sobel </p>
-                        <input type="number" id="sobel_threshold" placeholder="Nhập threshold" onchange="sobel()"
-                            min="0" step="1">
+                        <input type="number" id="sobel_threshold" placeholder="Nhập threshold" onchange="sobel()" min="0" step="1">
                     </td>
                     <td>
                         <p>Tăng cường Laplacian</p>
@@ -143,19 +138,358 @@
                     </td>
                     <td>
                         <p>ISODATA</p>
-                        <input type="number" id="isoData_deltaT" placeholder="Delta T (0.1 -> 255.0)"
-                            onchange="isoData(parseFloat(this.value))" min="0" max="255" step="0.1"
-                            style="width: 200px;">
+                        <input type="number" id="isoData_deltaT" placeholder="Delta T (0.1 -> 255.0)" onchange="isoData(parseFloat(this.value))" min="0" max="255" step="0.1" style="width: 200px;">
                     </td>
                     <td>
                         <p>Background Symmetry algorithm (<span style="color: red;">Chưa hoàn thiện</span>)</p>
-                        <input type="number" id="bsaPercent" placeholder="p% (0.01 -> 0.99)"
-                            onchange="bsa(parseFloat(this.value))" min="0.01" max="0.99" step="0.01"
-                            style="width: 200px;">
+                        <input type="number" id="bsaPercent" placeholder="p% (0.01 -> 0.99)" onchange="bsa(parseFloat(this.value))" min="0.01" max="0.99" step="0.01" style="width: 200px;">
                     </td>
                     <td>
+                        <h2>Mã hóa và giải mã ảnh RLC</h2>
+
+                        <input type="file" id="imageFileInput" accept="image/*" style="width: 300px;">
+                        <br>
+                        <textarea id="encodedTextArea" rows="5" cols="40"></textarea>
+                        <button onclick="clickDecodeRLC()">Decode</button>
+                        <br>
+                        <canvas id="canvasRLC"></canvas>
+                        <script>
+                            const canvasRLC = document.getElementById('canvasRLC');
+                            const ctxRLC = canvasRLC.getContext('2d');
+                            const imageFileInput = document.getElementById('imageFileInput');
+                            const encodedTextArea = document.getElementById('encodedTextArea');
+
+                            // Xử lý sự kiện khi chọn file
+                            imageFileInput.addEventListener('change', async function(event) {
+                                const file = event.target.files[0];
+                                const imageUrl = URL.createObjectURL(file);
+
+                                // Tải hình ảnh từ file lên canvasRLC
+                                const image = await loadImage(imageUrl);
+
+                                // Lấy kích thước gốc của ảnh
+                                const imageWidth = image.naturalWidth;
+                                const imageHeight = image.naturalHeight;
+
+                                // Cập nhật kích thước của canvasRLC
+                                canvasRLC.width = imageWidth;
+                                canvasRLC.height = imageHeight;
+
+                                ctxRLC.drawImage(image, 0, 0, imageWidth, imageHeight);
+
+                                // Lấy dữ liệu pixel từ hình ảnh trên canvasRLC
+                                const imageData = ctxRLC.getImageData(0, 0, imageWidth, imageHeight).data;
+                                // Mã hóa RLC và ghi vào textarea
+                                const encodedImage = encodeRLC(imageData, imageWidth, imageHeight);
+                                encodedTextArea.value = encodedImage;
+                            });
+
+                            // Xử lý sự kiện khi thay đổi textarea
+                            function clickDecodeRLC() {
+                                const encodedImage = encodedTextArea.value;
+
+                                try {
+                                    // Giải mã chuỗi RLC thành dữ liệu pixel
+                                    const imageData1 = decodeRLC(encodedImage);
+                                    const size = imageData1.slice(-2); // Lấy 2 phần tử cuối cùng của mảng
+                                    const imageData = imageData1.slice(0, -2); // Tạo một mảng mới không chứa 2 phần tử cuối cùng
+                                    const uint8ClampedArray = new Uint8ClampedArray(imageData.length);
+                                    for (let i = 0; i < imageData.length; i++) {
+                                        uint8ClampedArray[i] = imageData[i];
+                                    }
+                                    // Cập nhật kích thước của canvasRLC
+                                    canvasRLC.width = size[0];
+                                    canvasRLC.height = size[1];
+                                    // Hiển thị dữ liệu pixel lên canvasRLC
+                                    const decodedImageData = new ImageData(uint8ClampedArray, size[0], size[1]);
+                                    ctxRLC.putImageData(decodedImageData, 0, 0);
+                                } catch (error) {
+                                    // Hiển thị thông báo lỗi
+                                    alert('Đã xảy ra lỗi trong quá trình giải mã: ' + error.message);
+                                }
+                            }
+                            // Hàm tải hình ảnh từ URL
+                            function loadImage(url) {
+                                return new Promise((resolve, reject) => {
+                                    const image = new Image();
+                                    image.onload = function() {
+                                        resolve(image);
+                                    };
+                                    image.onerror = function() {
+                                        reject(new Error('Không thể tải hình ảnh.'));
+                                    };
+                                    image.src = url;
+                                });
+                            }
+                            // Hàm mã hóa RLC
+                            function encodeRLC(imageData, width, height) {
+                                let encodedData = '';
+                                let tempData = imageData[0];
+                                let tempCount = 1;
+
+                                for (let i = 1; i < imageData.length; i++) {
+                                    const currentData = imageData[i];
+
+                                    if (currentData === tempData) {
+                                        tempCount++;
+                                    } else {
+                                        encodedData += tempData + 'x' + tempCount + ' ';
+                                        tempData = currentData;
+                                        tempCount = 1;
+                                    }
+                                }
+
+                                // Xử lý pixel cuối cùng
+                                encodedData += tempData + 'x' + tempCount + ' ';
+                                encodedData += width + 'x' + "1" + ' ';
+                                encodedData += height + 'x' + "1";
+                                return encodedData.trim();
+                            }
+                            // Hàm giải mã RLC
+                            function decodeRLC(encodedData) {
+                                const encodedPixels = encodedData.split(' ');
+                                const imageData = [];
+
+                                for (const encodedPixel of encodedPixels) {
+                                    const [valueStr, countStr] = encodedPixel.split('x');
+                                    const value = parseInt(valueStr);
+                                    const count = parseInt(countStr);
+
+                                    for (let i = 0; i < count; i++) {
+                                        imageData.push(value);
+                                    }
+                                }
+
+                                return imageData;
+                            }
+
+                            // Hàm so sánh hai mảng
+                            function arraysEqual(a, b) {
+                                return JSON.stringify(a) === JSON.stringify(b);
+                            }
+                        </script>
                     </td>
                     <td>
+                        <h2>Mã hóa và giải mã ảnh Huffman</h2>
+
+                        <input type="file" id="imageFileInputHuffman" accept="image/*" style="width: 300px;">
+                        <br>
+                        <p>chuỗi mã </p>
+                        <input type="file" id="encodedTextAreaHuffman" style="width: 300px;"></input>
+                        <p>bảng mã</p>
+                        <input type="file" id="encodedTextAreaHuffmanTableJson" style="width: 300px;"></input>
+                        <button onclick="clickDecodeHuffman()">Decode</button>
+                        <br>
+                        <canvas id="canvasHuffman"></canvas>
+                        <script>
+                            const canvasHuffman = document.getElementById('canvasHuffman');
+                            const ctxHuffman = canvasHuffman.getContext('2d');
+                            const imageFileInputHuffman = document.getElementById('imageFileInputHuffman');
+                            const encodedTextAreaHuffman = document.getElementById('encodedTextAreaHuffman');
+                            const encodedTextAreaHuffmanTableJson = document.getElementById('encodedTextAreaHuffmanTableJson');
+
+                            // Xử lý sự kiện khi chọn file
+                            imageFileInputHuffman.addEventListener('change', async function(event) {
+                                const fileHuffman = event.target.files[0];
+                                const imageUrlHuffman = URL.createObjectURL(fileHuffman);
+
+                                // Tải hình ảnh từ file lên canvasRLC
+                                const imageHuffman = await loadImage(imageUrlHuffman);
+
+                                // Lấy kích thước gốc của ảnh
+                                const imageWidthHuffman = imageHuffman.naturalWidth;
+                                const imageHeightHuffman = imageHuffman.naturalHeight;
+
+                                // Cập nhật kích thước của canvasRLC
+                                canvasHuffman.width = imageWidthHuffman;
+                                canvasHuffman.height = imageHeightHuffman;
+
+                                ctxHuffman.drawImage(imageHuffman, 0, 0, imageWidthHuffman, imageHeightHuffman);
+
+                                // Lấy dữ liệu pixel từ hình ảnh trên canvasRLC
+                                const imageDataHuffman = ctxHuffman.getImageData(0, 0, imageWidthHuffman, imageHeightHuffman).data;
+                                // Mã hóa RLC và ghi vào textarea
+                                const encodedImageHuffmanRes = encodeHuffman(imageDataHuffman);
+                                const encodedString = encodedImageHuffmanRes.encodedString;
+                                const huffmanTable = encodedImageHuffmanRes.huffmanTable;
+
+                                const encodedStringBlob = new Blob([encodedString], {
+                                    type: 'text/plain'
+                                });
+                                const encodedStringUrl = URL.createObjectURL(encodedStringBlob);
+                                const encodedStringLink = document.createElement('a');
+                                encodedStringLink.href = encodedStringUrl;
+                                encodedStringLink.download = 'encoded_string.txt';
+                                encodedStringLink.click();
+
+                                // Tải về file txt chứa bảng Huffman dưới dạng JSON
+                                const huffmanTableBlob = new Blob([huffmanTable], {
+                                    type: 'text/plain'
+                                });
+                                const huffmanTableUrl = URL.createObjectURL(huffmanTableBlob);
+                                const huffmanTableLink = document.createElement('a');
+                                huffmanTableLink.href = huffmanTableUrl;
+                                huffmanTableLink.download = 'huffman_table.json';
+                                huffmanTableLink.click();
+                            });
+
+                            function encodeHuffman(imageData) {
+                                return encodeImageDataWithHuffman(imageData);
+                            }
+
+
+                            function clickDecodeHuffman() {
+                                // Đọc nội dung của tệp tin mã hóa
+                                const encodedFile = encodedTextAreaHuffman.files[0];
+                                const encodedReader = new FileReader();
+                                let encodedString = '';
+                                let huffmanTableJson = '';
+                                encodedReader.onload = function(event) {
+                                    const encodedContents = event.target.result;
+                                    // Lưu nội dung vào biến encodedString
+                                    encodedString = encodedContents;
+                                };
+
+                                encodedReader.readAsText(encodedFile, 'UTF-8');
+
+                                // Đọc nội dung của tệp tin bảng Huffman
+                                const huffmanTableFile = encodedTextAreaHuffmanTableJson.files[0];
+                                const huffmanTableReader = new FileReader();
+
+                                huffmanTableReader.onload = function(event) {
+                                    const huffmanTableContents = event.target.result;
+                                    // Lưu nội dung vào biến huffmanTableJson
+                                    huffmanTableJson = huffmanTableContents;
+                                };
+
+                                huffmanTableReader.readAsText(huffmanTableFile, 'UTF-8');
+                                debugger
+                                const huffmanTable = JSON.parse(huffmanTableJson);
+
+                                // Tạo bảng đảo ngược từ bảng mã Huffman (để dễ dùng trong quá trình giải mã)
+                                const reverseHuffmanTable = {};
+                                for (const key in huffmanTable) {
+                                    const code = huffmanTable[key];
+                                    reverseHuffmanTable[code] = key;
+                                }
+
+                                // Thực hiện giải mã Huffman
+                                let decodedString = '';
+                                let currentCode = '';
+                                for (let i = 0; i < encodedString.length; i++) {
+                                    currentCode += encodedString[i];
+                                    if (reverseHuffmanTable[currentCode]) {
+                                        decodedString += reverseHuffmanTable[currentCode];
+                                        currentCode = '';
+                                    }
+                                }
+
+                                // Hiển thị kết quả giải mã
+                                console.log("Decoded String:", decodedString);
+                            }
+
+                            class HuffmanNode {
+                                constructor(value, frequency) {
+                                    this.value = value;
+                                    this.frequency = frequency;
+                                    this.left = null;
+                                    this.right = null;
+                                }
+                            }
+
+                            // Tạo bảng tần số từ mảng đầu vào
+                            function createFrequencyTable(array) {
+                                const frequencyTable = {};
+                                for (let i = 0; i < array.length; i++) {
+                                    const value = array[i];
+                                    if (frequencyTable[value]) {
+                                        frequencyTable[value]++;
+                                    } else {
+                                        frequencyTable[value] = 1;
+                                    }
+                                }
+                                return frequencyTable;
+                            }
+
+                            // Tạo cây Huffman từ bảng tần số
+                            function buildHuffmanTree(frequencyTable) {
+                                const priorityQueue = [];
+                                for (const value in frequencyTable) {
+                                    const frequency = frequencyTable[value];
+                                    const node = new HuffmanNode(value, frequency);
+                                    priorityQueue.push(node);
+                                }
+                                priorityQueue.sort((a, b) => a.frequency - b.frequency);
+
+                                while (priorityQueue.length > 1) {
+                                    const leftNode = priorityQueue.shift();
+                                    const rightNode = priorityQueue.shift();
+                                    const parentNode = new HuffmanNode(null, leftNode.frequency + rightNode.frequency);
+                                    parentNode.left = leftNode;
+                                    parentNode.right = rightNode;
+                                    priorityQueue.push(parentNode);
+                                    priorityQueue.sort((a, b) => a.frequency - b.frequency);
+                                }
+
+                                return priorityQueue[0];
+                            }
+
+                            // Tạo bảng mã Huffman từ cây Huffman
+                            function createHuffmanTable(rootNode) {
+                                const huffmanTable = {};
+
+                                function traverse(node, path) {
+                                    if (node.value !== null) {
+                                        huffmanTable[node.value] = path;
+                                    } else {
+                                        traverse(node.left, path + '0');
+                                        traverse(node.right, path + '1');
+                                    }
+                                }
+
+                                traverse(rootNode, '');
+
+                                return huffmanTable;
+                            }
+
+                            // Mã hóa mảng imageData thành chuỗi Huffman và tạo bảng mã
+                            function encodeImageDataWithHuffman(imageData) {
+                                const frequencyTable = createFrequencyTable(imageData);
+                                const huffmanTree = buildHuffmanTree(frequencyTable);
+                                const huffmanTable = createHuffmanTable(huffmanTree);
+                                let encodedString = '';
+
+                                for (let i = 0; i < imageData.length; i++) {
+                                    const value = imageData[i];
+                                    encodedString += huffmanTable[value];
+                                }
+                                return {
+                                    encodedString: encodedString,
+                                    huffmanTable: JSON.stringify(huffmanTable)
+                                };
+                            }
+                        </script>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>Lempel-Ziv </p>
+                        <button onclick="LempelZiv()">Lempel-Ziv </button>
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>
+
+                    </td>
+                    <td>
+
                     </td>
                 </tr>
             </table>
@@ -178,7 +512,7 @@
         histogram_canvas.width = 512;
         histogram_canvas.height = 500;
 
-        document.getElementById('img_input').addEventListener('change', function (e) {
+        document.getElementById('img_input').addEventListener('change', function(e) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx_new.clearRect(0, 0, canvas_new.width, canvas_new.height);
             ctx_histogram_canvas.clearRect(0, 0, ctx_histogram_canvas.width, ctx_histogram_canvas.height);
@@ -186,7 +520,7 @@
             var image = new Image();
             image.src = URL.createObjectURL(e.target.files[0]);
 
-            image.onload = function () {
+            image.onload = function() {
                 canvas.width = image.width;
                 canvas.height = image.height;
                 ctx.drawImage(image, 0, 0);
@@ -202,6 +536,7 @@
                 drawHistogram(histogramDataRating);
             };
         });
+
         function drawHistogram(histogramData) {
             var barWidth = Math.floor(histogram_canvas.width / histogramData.length);
 
@@ -383,6 +718,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function filterLaplacianMutant() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -400,6 +736,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function increaseLaplacian() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -417,6 +754,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function filterLaplacian() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -434,6 +772,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function filterMidpoint() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -451,6 +790,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function filterMedian() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -469,6 +809,7 @@
             ctx_new.putImageData(imageData, 0, 0);
 
         }
+
         function filterTrungBinhKGiaTri() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -487,6 +828,7 @@
             ctx_new.putImageData(imageData, 0, 0);
 
         }
+
         function filterKhongGian() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -504,6 +846,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function filterMin() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -521,6 +864,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function filterMax() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -585,6 +929,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function roberts() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -612,6 +957,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function sobel() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -629,6 +975,7 @@
             }
             ctx_new.putImageData(imageData, 0, 0);
         }
+
         function prewitt() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -670,7 +1017,7 @@
             var tempabs = 1;
             if (iMax > 128)
                 for (var i = iMax + 1; i <= 255; i++) {
-                    debugger
+
                     if (Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]) < tempabs) {
                         tempabs = Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]);
                         virtual_threshold = i;
@@ -678,7 +1025,7 @@
                 }
             else
                 for (var i = iMax - 1; i >= 0; i--) {
-                    debugger
+
                     if (Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]) < tempabs) {
                         tempabs = Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]);
                         virtual_threshold = i;
@@ -700,19 +1047,19 @@
             while (true) {
 
                 var p = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
-                var t1 = (getTrungBinhTichLuy(p, 0, Math.round(t)) / getTongTichLuy(p, 0, Math.round(t))
-                    + getTrungBinhTichLuy(p, Math.round(t) + 1, 255) / getTongTichLuy(p, Math.round(t) + 1, 255)) / 2;
+                var t1 = (getTrungBinhTichLuy(p, 0, Math.round(t)) / getTongTichLuy(p, 0, Math.round(t)) +
+                    getTrungBinhTichLuy(p, Math.round(t) + 1, 255) / getTongTichLuy(p, Math.round(t) + 1, 255)) / 2;
 
                 console.log(Math.abs(t1 - t));
                 if (Math.abs(t1 - t) < deltaT) {
                     break;
-                }
-                else {
+                } else {
                     t = t1;
                 }
             }
             makeThreshold(t);
         }
+
         function otsu() {
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
@@ -757,6 +1104,7 @@
             }
             return histogramData;
         }
+
         function getTongTichLuy(histogramDataRating, from, to) {
             var sumTichLuyk = 0;
             for (var j = from; j <= to; j++) {
@@ -764,6 +1112,7 @@
             }
             return sumTichLuyk;
         }
+
         function getTrungBinhTichLuy(histogramDataRating, from, to) {
             var avgTichLuyk = 0;
             for (var j = from; j <= to; j++) {
@@ -771,6 +1120,7 @@
             }
             return avgTichLuyk;
         }
+
         function getHistogram(data) {
             var histogramData = [];
             for (var i = 0; i <= 255; i++) {
@@ -781,6 +1131,7 @@
             }
             return histogramData;
         }
+
         function getHistogramRating(histogramData, countPixel) {
             console.log(histogramData)
             var histogramDataRating = [];
@@ -789,6 +1140,7 @@
             }
             return histogramDataRating;
         }
+
         function getSobelDirection(inputMatrix) {
             var sumX = 0;
             sumX += (inputMatrix[0][2] - inputMatrix[0][0]) / 2;
@@ -806,6 +1158,7 @@
             var grad = Math.atan(Math.abs(sumX / sumY));
             return grad;
         }
+
         function getGaussianPixel(inputMatrix) {
             var gaussianMatrix = [
                 [2, 4, 5, 4, 2],
@@ -822,16 +1175,19 @@
             }
             return Math.round(sum / 159);
         }
+
         function getLaplacianMutantFilterPixel(inputMatrix) {
             var value = (inputMatrix[0][0] + inputMatrix[0][1] + inputMatrix[0][2] +
                 inputMatrix[1][0] - 8 * inputMatrix[1][1] + inputMatrix[1][2] +
                 inputMatrix[2][0] + inputMatrix[2][1] + inputMatrix[2][2]);
             return value;
         }
+
         function getLaplacianFilterPixel(inputMatrix) {
             var value = (inputMatrix[2][1] + inputMatrix[0][1] + inputMatrix[1][0] + inputMatrix[1][2] - 4 * inputMatrix[1][1]);
             return value;
         }
+
         function getSobelPixel(inputMatrix) {
             var sumX = 0;
             sumX += (inputMatrix[0][2] - inputMatrix[0][0]) / 2;
@@ -850,6 +1206,7 @@
 
             return deltaF >= threshold ? 255 : 0;
         }
+
         function getPrewittPixel(inputMatrix) {
             var sumX = 0;
             sumX += (inputMatrix[0][2] - inputMatrix[0][0]) / 2;
@@ -868,6 +1225,7 @@
 
             return deltaF >= threshold ? 255 : 0;
         }
+
         function createMatrix(dataArray, height, width) {
             var h = 0;
             var w = 0;
@@ -888,6 +1246,7 @@
             response.push(responseRow)
             return response;
         }
+
         function createNeibourhoodMatrix(dataMatrix, x, y, size) {
             var h = 0;
             var w = 0;
@@ -901,13 +1260,17 @@
                         try {
                             responseRow.push(dataMatrix[i][j]);
                         } catch {
-                            console.log({ i, j })
+                            console.log({
+                                i,
+                                j
+                            })
                         }
                 }
                 response.push(responseRow);
             }
             return response;
         }
+
         function getMinOfMatrix(matrix) {
             var i = 0;
             var j = 0;
@@ -924,6 +1287,7 @@
             }
             return min;
         }
+
         function getMaxOfMatrix(matrix) {
             var i = 0;
             var j = 0;
@@ -940,6 +1304,7 @@
             }
             return max;
         }
+
         function getValueOfStarFormula(matrix) {
             var i = 0;
             var j = 0;
@@ -958,6 +1323,7 @@
             if (sumMatrixFilter == 0) return 0;
             return sumStar / sumMatrixFilter;
         }
+
         function getAVG_KValue(matrix, current) {
             var k = parseInt(document.getElementById("trungbinhk").value);
             var phi = parseInt(document.getElementById("trungbinhphi").value);
@@ -976,6 +1342,7 @@
             if (Math.abs(sum - current) > phi) return Math.round(sum);
             else return current;
         }
+
         function getMedianValue(matrix) {
             var k = parseInt(document.getElementById("trungbinhk").value);
             var phi = parseInt(document.getElementById("trungbinhphi").value);
@@ -988,6 +1355,7 @@
             l.sort().reverse();
             return l[l.length % 2 == 0 ? l.length / 2 : (l.length + 1) / 2]
         }
+
         function getMidpoint(matrix) {
             var i = 0;
             var j = 0;
