@@ -25,6 +25,7 @@
         <div>
             <div class="component">
                 <input type="file" id="img_input" onclick="this.value=null" style="width: 400px;">
+                <canvas id="histogram"></canvas>
             </div>
             <table style="width: 100%;">
                 <tr>
@@ -104,7 +105,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <p>Lọc Midpoint filter (<span style="color: red;">Chưa hoàn thiện</span>) </p>
+                        <p>Lọc Midpoint filter </p>
                         <button onclick="filterMidpoint()">Lọc Midpoint filter</button>
                     </td>
                     <td>
@@ -133,7 +134,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <p>Canny (<span style="color: red;">Chưa hoàn thiện</span>)</p>
+                        <p>Canny </p>
                         <button onclick="edgeCanny()">Canny</button>
                     </td>
                     <td>
@@ -161,7 +162,6 @@
         </div>
         <canvas id="img_canvas"></canvas>
         <canvas id="img_canvas_new"></canvas>
-        <canvas id="histo"></canvas>
     </div>
     <script>
         //#region pre-handle
@@ -172,16 +172,16 @@
         var canvas_new = document.getElementById("img_canvas_new");
         var ctx_new = canvas_new.getContext("2d");
 
-        // var histogram_canvas = document.getElementById("histogram");
-        // var ctx_histogram_canvas = histogram_canvas.getContext("2d");
+        var histogram_canvas = document.getElementById("histogram");
+        var ctx_histogram_canvas = histogram_canvas.getContext("2d");
 
-        // histogram_canvas.width = 2048;
-        // histogram_canvas.height = 500;
+        histogram_canvas.width = 512;
+        histogram_canvas.height = 500;
 
         document.getElementById('img_input').addEventListener('change', function (e) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx_new.clearRect(0, 0, canvas_new.width, canvas_new.height);
-            // ctx_histogram_canvas.clearRect(0, 0, ctx_histogram_canvas.width, ctx_histogram_canvas.height);
+            ctx_histogram_canvas.clearRect(0, 0, ctx_histogram_canvas.width, ctx_histogram_canvas.height);
 
             var image = new Image();
             image.src = URL.createObjectURL(e.target.files[0]);
@@ -194,8 +194,27 @@
                 canvas_new.width = image.width;
                 canvas_new.height = image.height;
 
+                var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                var data = imageData.data;
+                var matrix = createMatrix(data, canvas.width, canvas.height);
+                var histogramDataRating = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
+                // Hiển thị histogram trên canvas histogram_canvas
+                drawHistogram(histogramDataRating);
             };
         });
+        function drawHistogram(histogramData) {
+            var barWidth = Math.floor(histogram_canvas.width / histogramData.length);
+
+            for (var i = 0; i < histogramData.length; i++) {
+                var barHeight = histogramData[i] * 500;
+                var x = i * barWidth;
+                var y = histogram_canvas.height - barHeight;
+                var barColor = "black";
+
+                ctx_histogram_canvas.fillStyle = barColor;
+                ctx_histogram_canvas.fillRect(x, y, barWidth, barHeight);
+            }
+        }
         //#endregion
 
         //#region default Transform
@@ -523,73 +542,19 @@
 
         //#region edge detection
         function edgeCanny() {
-            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            var data = imageData.data;
-            var matrixold0 = createMatrix(data, canvas.height, canvas.width);
-            var matrixold = [];
-            var x = 0;
+            var srcCanvas = document.getElementById('img_canvas');
+            // srcCanvas.getContext('2d').drawImage(e.target, 0, 0);
 
-            for (let i = 0; i < matrixold0.length; i++) {
-                var matrixoldrow = [];
-                for (let j = 0; j < matrixold0[i].length; j++) {
-                    var value = getGaussianPixel(createNeibourhoodMatrix(matrixold0, i, j, 5))
-                    matrixoldrow.push(value);
-                }
-                matrixold.push(matrixoldrow);
-            }
-            var directionMatrix = [];
-            for (let i = 0; i < matrixold.length; i++) {
-                directionMatrix[i] = [];
-                for (let j = 0; j < matrixold[i].length; j++) {
-                    var value = 180 * getSobelDirection(createNeibourhoodMatrix(matrixold, i, j, 3)) / Math.PI;
-                    if ((value >= 0 && value < 22.5) || (value >= 157.5 && value <= 180))
-                        directionMatrix[i][j] = 0;
-                    else if ((value >= 22.5 && value < 67.5))
-                        directionMatrix[i][j] = 45;
-                    else if ((value >= 67.5 && value < 112.5))
-                        directionMatrix[i][j] = 90;
-                    else directionMatrix[i][j] = 135;
-                }
-            }
-            debugger
-            for (let i = 0; i < matrixold.length; i++) {
-                for (let j = 0; j < matrixold[i].length; j++) {
-                    var back = 0;
-                    var front = 0;
-                    var value = matrixold[i][j];
-                    switch (directionMatrix[i][j]) {
-                        case 0:
-                            back = j - 1 < 0 ? 0 : matrixold[i][j - 1];
-                            front = j + 1 >= matrixold[i].length ? 0 : matrixold[i][j + 1];
-                            break;
-                        case 45:
-                            back = j - 1 < 0 || i + 1 >= matrixold.length ? 0 : matrixold[i + 1][j - 1];
-                            front = j + 1 >= matrixold[i].length || i - 1 < 0 ? 0 : matrixold[i - 1][j + 1];
-                            break;
-                        case 90:
-                            back = j + 1 >= matrixold[i].length || i + 1 >= matrixold.length ? 0 : matrixold[i + 1][j + 1];
-                            front = j - 1 < 0 || i - 1 < 0 ? 0 : matrixold[i - 1][j - 1];
-                            break;
-                        case 135:
-                            back = i - 1 < 0 ? 0 : matrixold[i - 1][j];
-                            front = i + 1 >= matrixold.length ? 0 : matrixold[i + 1][j];
-                            break;
-                        default:
-                            break;
-                    }
-                    if (!(value > back && value > front)) {
-                        value = 0;
-                        matrixold[i][j] = 0;
-                    }
+            var src = cv.imread(srcCanvas); // load the image from canvas
+            var dst = new cv.Mat();
 
-                    data[x] = value;
-                    data[x + 1] = value;
-                    data[x + 2] = value;
-                    data[x + 3] = 255;
-                    x += 4;
-                }
-            }
-            ctx_new.putImageData(imageData, 0, 0);
+            cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
+
+            cv.Canny(src, dst, 50, 100, 3, false); // You can try more different parameters
+            cv.imshow('img_canvas_new', dst); // display the output to canvas
+
+            src.delete(); // remember to free the memory
+            dst.delete();
         }
 
         function laplacian() {
@@ -609,7 +574,7 @@
                     var sumY = 0;
                     sumY += (xy1 + xy_1 - 2 * xy)
                     var value = Math.sqrt(sumX + sumY);
-                    debugger
+
                     value = value == NaN ? 0 : value;
                     data[x] = value;
                     data[x + 1] = value;
@@ -688,43 +653,56 @@
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
             var matrix = createMatrix(data, canvas.width, canvas.height);
-            var histogramData = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
+            var histogramDataRating = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
+            var histogramDataRatingSum = histogramDataRating;
             var iMax = 0;
             var iMaxDoiXung = 0;
             var count = 0;
             var sum = 0;
             var tempSum = 0;
             for (var i = 0; i <= 255; i++) {
-                if (histogramData[i] > histogramData[iMax])
+                if (histogramDataRating[i] > histogramDataRating[iMax])
                     iMax = i;
+                if (i == 0) continue;
+                histogramDataRatingSum[i] += histogramDataRatingSum[i - 1];
             }
-
-            for (; count <= 255; count++) {
-                sum += histogramData[count];
-                if (sum > percent) {
-                    count--;
-                    break;
+            var virtual_threshold = 0;
+            var tempabs = 1;
+            if (iMax > 128)
+                for (var i = iMax + 1; i <= 255; i++) {
+                    debugger
+                    if (Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]) < tempabs) {
+                        tempabs = Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]);
+                        virtual_threshold = i;
+                    }
                 }
-            }
-            console.log(histogramData)
-            console.log(count);
-            console.log(iMax);
+            else
+                for (var i = iMax - 1; i >= 0; i--) {
+                    debugger
+                    if (Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]) < tempabs) {
+                        tempabs = Math.abs(histogramDataRating[iMax] * percent - histogramDataRating[iMax]);
+                        virtual_threshold = i;
+                    }
+                }
+            var threshold = iMax + (iMax - virtual_threshold)
+            makeThreshold(threshold);
         }
 
         function isoData(deltaT) {
+            if (deltaT == null || deltaT == NaN) return;
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var data = imageData.data;
             var matrix = createMatrix(data, canvas.width, canvas.height);
-            debugger
+
             if (deltaT == 0) return;
             if (matrix.length == 0) return;
             var t = 128;
             while (true) {
-                debugger
+
                 var p = getHistogramRating(getHistogramOfMatrix(matrix), data.length / 4);
                 var t1 = (getTrungBinhTichLuy(p, 0, Math.round(t)) / getTongTichLuy(p, 0, Math.round(t))
                     + getTrungBinhTichLuy(p, Math.round(t) + 1, 255) / getTongTichLuy(p, Math.round(t) + 1, 255)) / 2;
-                debugger
+
                 console.log(Math.abs(t1 - t));
                 if (Math.abs(t1 - t) < deltaT) {
                     break;
@@ -1011,10 +989,29 @@
             return l[l.length % 2 == 0 ? l.length / 2 : (l.length + 1) / 2]
         }
         function getMidpoint(matrix) {
-
+            var i = 0;
+            var j = 0;
+            var max = matrix[0][0];
+            var min = matrix[0][0];
+            while (i < matrix.length) {
+                while (j < matrix[i].length) {
+                    if (max < matrix[i][j]) {
+                        max = matrix[i][j];
+                    }
+                    if (min > matrix[i][j]) {
+                        min = matrix[i][j];
+                    }
+                    j++;
+                }
+                i++;
+                j = 0;
+            }
+            return (max + min) / 2;
         }
         //#endregion
     </script>
+    <script src="opencv.js" type="text/javascript"></script>
+
 </body>
 
 </html>
