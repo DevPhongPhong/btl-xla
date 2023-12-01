@@ -8,7 +8,7 @@
         input {
             width: 50px;
         }
-        
+
         td {
             border: 1px solid;
         }
@@ -35,7 +35,8 @@
                     </td>
                     <td>
                         <p>Phân ngưỡng</p>
-                        <input type="number" id="threshold_input" placeholder="Nhập ngưỡng 0-255" onchange="makeThreshold(parseInt(this.value))" min="0" max="255" style="width: 200px;">
+                        <input type="number" id="threshold_input" placeholder="Nhập ngưỡng 0-255"
+                            onchange="makeThreshold(parseInt(this.value))" min="0" max="255" style="width: 200px;">
                     </td>
                     <td>
                         <p>Biến đổi Log</p>
@@ -43,7 +44,8 @@
                     </td>
                     <td>
                         <p>Biến đổi mũ</p>
-                        <input type="number" id="gamma_input" placeholder="Nhập gamma" min="0" step="0.01" style="width: 200px;">
+                        <input type="number" id="gamma_input" placeholder="Nhập gamma" min="0" step="0.01"
+                            style="width: 200px;">
                         <button onclick="applyPowerTransform()">Power</button>
                         <button onclick="applyRootTransform()">Root</button>
                     </td>
@@ -108,15 +110,18 @@
                     </td>
                     <td>
                         <p>Biên Roberts</p>
-                        <input type="number" id="roberts_threshold" placeholder="Nhập threshold" onchange="roberts()" min="0" step="1">
+                        <input type="number" id="roberts_threshold" placeholder="Nhập threshold" onchange="roberts()"
+                            min="0" step="1">
                     </td>
                     <td>
                         <p>Biên Prewitt </p>
-                        <input type="number" id="prewitt_threshold" placeholder="Nhập threshold" onchange="prewitt()" min="0" step="1">
+                        <input type="number" id="prewitt_threshold" placeholder="Nhập threshold" onchange="prewitt()"
+                            min="0" step="1">
                     </td>
                     <td>
                         <p>Biên Sobel </p>
-                        <input type="number" id="sobel_threshold" placeholder="Nhập threshold" onchange="sobel()" min="0" step="1">
+                        <input type="number" id="sobel_threshold" placeholder="Nhập threshold" onchange="sobel()"
+                            min="0" step="1">
                     </td>
                     <td>
                         <p>Tăng cường Laplacian</p>
@@ -138,11 +143,15 @@
                     </td>
                     <td>
                         <p>ISODATA</p>
-                        <input type="number" id="isoData_deltaT" placeholder="Delta T (0.1 -> 255.0)" onchange="isoData(parseFloat(this.value))" min="0" max="255" step="0.1" style="width: 200px;">
+                        <input type="number" id="isoData_deltaT" placeholder="Delta T (0.1 -> 255.0)"
+                            onchange="isoData(parseFloat(this.value))" min="0" max="255" step="0.1"
+                            style="width: 200px;">
                     </td>
                     <td>
                         <p>Background Symmetry algorithm (<span style="color: red;">Chưa hoàn thiện</span>)</p>
-                        <input type="number" id="bsaPercent" placeholder="p% (0.01 -> 0.99)" onchange="bsa(parseFloat(this.value))" min="0.01" max="0.99" step="0.01" style="width: 200px;">
+                        <input type="number" id="bsaPercent" placeholder="p% (0.01 -> 0.99)"
+                            onchange="bsa(parseFloat(this.value))" min="0.01" max="0.99" step="0.01"
+                            style="width: 200px;">
                     </td>
                     <td>
                         <h2>Mã hóa và giải mã ảnh RLC</h2>
@@ -160,7 +169,7 @@
                             const encodedTextArea = document.getElementById('encodedTextArea');
 
                             // Xử lý sự kiện khi chọn file
-                            imageFileInput.addEventListener('change', async function(event) {
+                            imageFileInput.addEventListener('change', async function (event) {
                                 const file = event.target.files[0];
                                 const imageUrl = URL.createObjectURL(file);
 
@@ -212,10 +221,10 @@
                             function loadImage(url) {
                                 return new Promise((resolve, reject) => {
                                     const image = new Image();
-                                    image.onload = function() {
+                                    image.onload = function () {
                                         resolve(image);
                                     };
-                                    image.onerror = function() {
+                                    image.onerror = function () {
                                         reject(new Error('Không thể tải hình ảnh.'));
                                     };
                                     image.src = url;
@@ -289,7 +298,7 @@
                             const encodedTextAreaHuffmanTableJson = document.getElementById('encodedTextAreaHuffmanTableJson');
 
                             // Xử lý sự kiện khi chọn file
-                            imageFileInputHuffman.addEventListener('change', async function(event) {
+                            imageFileInputHuffman.addEventListener('change', async function (event) {
                                 const fileHuffman = event.target.files[0];
                                 const imageUrlHuffman = URL.createObjectURL(fileHuffman);
 
@@ -310,7 +319,7 @@
                                 const imageDataHuffman = ctxHuffman.getImageData(0, 0, imageWidthHuffman, imageHeightHuffman).data;
                                 // Mã hóa RLC và ghi vào textarea
                                 const encodedImageHuffmanRes = encodeHuffman(imageDataHuffman);
-                                const encodedString = encodedImageHuffmanRes.encodedString;
+                                const encodedString = encodedImageHuffmanRes.encodedString + ' ' + imageWidthHuffman + ' ' + imageHeightHuffman;
                                 const huffmanTable = encodedImageHuffmanRes.huffmanTable;
 
                                 const encodedStringBlob = new Blob([encodedString], {
@@ -337,55 +346,57 @@
                                 return encodeImageDataWithHuffman(imageData);
                             }
 
+                            // Hàm để đọc tệp tin bằng FileReader và trả về một Promise
+                            function readFile(file) {
+                                return new Promise((resolve, reject) => {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => resolve(event.target.result);
+                                    reader.onerror = (error) => reject(error);
+                                    reader.readAsText(file, 'UTF-8');
+                                });
+                            }
 
-                            function clickDecodeHuffman() {
+
+                            async function clickDecodeHuffman() {
                                 // Đọc nội dung của tệp tin mã hóa
                                 const encodedFile = encodedTextAreaHuffman.files[0];
-                                const encodedReader = new FileReader();
-                                let encodedString = '';
-                                let huffmanTableJson = '';
-                                encodedReader.onload = function(event) {
-                                    const encodedContents = event.target.result;
-                                    // Lưu nội dung vào biến encodedString
-                                    encodedString = encodedContents;
-                                };
-
-                                encodedReader.readAsText(encodedFile, 'UTF-8');
+                                const encodeData = await readFile(encodedFile)
+                                const [encodedString, width, height] = encodeData.split(" ");
 
                                 // Đọc nội dung của tệp tin bảng Huffman
                                 const huffmanTableFile = encodedTextAreaHuffmanTableJson.files[0];
-                                const huffmanTableReader = new FileReader();
+                                const huffmanTableJson = await readFile(huffmanTableFile);
 
-                                huffmanTableReader.onload = function(event) {
-                                    const huffmanTableContents = event.target.result;
-                                    // Lưu nội dung vào biến huffmanTableJson
-                                    huffmanTableJson = huffmanTableContents;
-                                };
-
-                                huffmanTableReader.readAsText(huffmanTableFile, 'UTF-8');
-                                debugger
                                 const huffmanTable = JSON.parse(huffmanTableJson);
 
                                 // Tạo bảng đảo ngược từ bảng mã Huffman (để dễ dùng trong quá trình giải mã)
                                 const reverseHuffmanTable = {};
                                 for (const key in huffmanTable) {
                                     const code = huffmanTable[key];
-                                    reverseHuffmanTable[code] = key;
+                                    reverseHuffmanTable[code] = key.toString().padStart(3, '0');
                                 }
 
                                 // Thực hiện giải mã Huffman
                                 let decodedString = '';
                                 let currentCode = '';
+                                let dataImage = [];
                                 for (let i = 0; i < encodedString.length; i++) {
                                     currentCode += encodedString[i];
                                     if (reverseHuffmanTable[currentCode]) {
                                         decodedString += reverseHuffmanTable[currentCode];
                                         currentCode = '';
+                                        if (decodedString.length == 3) {
+                                            dataImage.push(parseInt(decodedString));
+                                            decodedString = '';
+                                        }
                                     }
                                 }
-
-                                // Hiển thị kết quả giải mã
-                                console.log("Decoded String:", decodedString);
+                                // Push dataImage to canvasHuffman
+                                const canvasHuffman = document.getElementById('canvasHuffman');
+                                const ctxHuffman = canvasHuffman.getContext('2d');
+                                const imageDataHuffman = ctxHuffman.createImageData(width, height);
+                                imageDataHuffman.data.set(dataImage);
+                                ctxHuffman.putImageData(imageDataHuffman, 0, 0);
                             }
 
                             class HuffmanNode {
@@ -460,8 +471,7 @@
                                 let encodedString = '';
 
                                 for (let i = 0; i < imageData.length; i++) {
-                                    const value = imageData[i];
-                                    encodedString += huffmanTable[value];
+                                    encodedString += huffmanTable[imageData[i]];
                                 }
                                 return {
                                     encodedString: encodedString,
@@ -512,7 +522,7 @@
         histogram_canvas.width = 512;
         histogram_canvas.height = 500;
 
-        document.getElementById('img_input').addEventListener('change', function(e) {
+        document.getElementById('img_input').addEventListener('change', function (e) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx_new.clearRect(0, 0, canvas_new.width, canvas_new.height);
             ctx_histogram_canvas.clearRect(0, 0, ctx_histogram_canvas.width, ctx_histogram_canvas.height);
@@ -520,7 +530,7 @@
             var image = new Image();
             image.src = URL.createObjectURL(e.target.files[0]);
 
-            image.onload = function() {
+            image.onload = function () {
                 canvas.width = image.width;
                 canvas.height = image.height;
                 ctx.drawImage(image, 0, 0);
